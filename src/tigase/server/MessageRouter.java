@@ -646,7 +646,7 @@ public class MessageRouter extends AbstractMessageReceiver implements MessageRou
 
 			MessageRouterConfig conf = new MessageRouterConfig(props);
 			String[] reg_names = conf.getRegistrNames();
-			// 我的配置加载了这几个CompnentRegistrator:[vhost-man, stats, cluster-contr]
+			// 我的配置加载了这几个CompnentRegistrator:[vhost-man, stats(Statistics), cluster-contr]
 			for (String name : reg_names) {
 
 				// First remove it and later, add it again if still active
@@ -699,7 +699,7 @@ public class MessageRouter extends AbstractMessageReceiver implements MessageRou
 						}
 					} // end of if (cr == null)
 
-					// 如果实例如果实现了MessageReceiver接口
+					// 如果实例如果实现了MessageReceiver接口,就要增加到路由,因为消息到了要转发zhuan'a
 					if (mr instanceof MessageReceiver) {
 						addRouter((MessageReceiver) mr);
 					} else {

@@ -1,8 +1,13 @@
 package tigase.server.test;
 
+import java.io.BufferedInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.logging.Logger;
+
+import sun.awt.geom.AreaOp.AddOp;
 import tigase.server.AbstractMessageReceiver;
 import tigase.server.Message;
 import tigase.server.Packet;
@@ -15,8 +20,14 @@ public class TestAPI extends AbstractMessageReceiver {
  
   public TestAPI() {
 	System.out.println("TestAPI instance");
-}
+	if(TestAPI.testAPI == null)
+		TestAPI.testAPI = this;
+	else
+		System.out.println("TestAPI重复实例");
+  }
 	
+  public static TestAPI testAPI;
+  
   private static final Logger log =
     Logger.getLogger(TestAPI.class.getName());
  
@@ -133,7 +144,7 @@ public class TestAPI extends AbstractMessageReceiver {
 //      spamCounter = 0;
 //    }
 //  }
-  
+  /*
 	@Override
 	public synchronized void everySecond() {
 		super.everyMinute();
@@ -143,14 +154,14 @@ public class TestAPI extends AbstractMessageReceiver {
 			JID from = JID.jidInstance("admin", "test", null);
 			JID to = JID.jidInstance("ceshi", "test", null);
 			if (delayCounter == 10) {
-				System.out.println("到达10s了.....................");
+//				System.out.println("到达10s了.....................");
 				// Message.getMessage(from, to, type, body, subject, thread, id)
 				Packet packet = Message.getMessage(from, to, StanzaType.chat,
 						"Admin send a message To u" + spamCounter,
 						"Spam counter", null, newPacketId("spam-"));
 				addOutPacket(packet);
 			} else if (delayCounter == 20) {
-				System.out.println("到达20s了.....................");
+//				System.out.println("到达20s了.....................");
 				Packet packet = Message.getMessage(to, from, StanzaType.chat,
 						"测试", "Test Sender", null, newPacketId("spam-"));
 				addOutPacket(packet);
@@ -160,5 +171,55 @@ public class TestAPI extends AbstractMessageReceiver {
 			e.printStackTrace();
 		}
 	}
- 
+	*/
+  
+	public static boolean sendMessage(String to, String from, String subject, String message, String domain) {
+		TestAPI component = TestAPI.testAPI;
+		if(component == null) {
+			throw new NullPointerException();
+		}
+		try {
+			JID fromJID = JID.jidInstance(from, domain, null);
+			JID toJID = JID.jidInstance(to, domain, null);
+			Packet packet = Message.getMessage(fromJID, toJID, StanzaType.chat, message,
+					subject, null, component.newPacketId("testAPI-"));
+			component.addOutPacket(packet);
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
+	}
+	
+	static {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(15000);
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
+				BufferedInputStream bis = new BufferedInputStream(System.in);
+				Scanner cin = new Scanner(bis,"GBK");
+				while(true) {
+					System.out.println("------------请您输入信息------------");
+					String text = cin.nextLine();
+					String text1 = null;
+					try {
+						text1 = new String(text.getBytes(), "UTF-8");
+					} catch (UnsupportedEncodingException e) {
+						e.printStackTrace();
+					}
+					String[] string = text1.split(",");
+					String to = string[0];
+					String from = string[1];
+					String subject = string[2];
+					String message = string[3];
+					String domain = string[4];
+					TestAPI.sendMessage(to, from, subject, message, domain);
+					System.out.println("------------发送成功------------");					
+				}
+			}
+		}).start();
+	}
 }
